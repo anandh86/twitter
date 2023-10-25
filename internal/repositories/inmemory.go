@@ -10,8 +10,10 @@ import (
 // In memory implementation
 func ProvideInMemoryRepo() ports.IRepository {
 	return &myInMemoryRepository{
-		userMap:          make(map[int]domain.User),
-		currentNoOfUsers: 0,
+		userMap:           make(map[int]domain.User),
+		tweetMap:          make(map[int]domain.Tweet),
+		currentNoOfUsers:  0,
+		currentNoOfTweets: 0,
 	}
 }
 
@@ -19,6 +21,9 @@ func ProvideInMemoryRepo() ports.IRepository {
 type myInMemoryRepository struct {
 	userMap          map[int]domain.User
 	currentNoOfUsers int
+
+	tweetMap          map[int]domain.Tweet
+	currentNoOfTweets int
 }
 
 func (u *myInMemoryRepository) Save(user domain.User) (domain.User, error) {
@@ -45,4 +50,23 @@ func (u *myInMemoryRepository) GetUserById(id int) (domain.User, error) {
 	}
 
 	return user, nil
+}
+
+func (u *myInMemoryRepository) SaveTweet(tweet domain.Tweet) (domain.Tweet, error) {
+	tweetID := u.currentNoOfTweets + 1
+	u.currentNoOfTweets = tweetID
+	tweet.ID = tweetID
+	u.tweetMap[tweetID] = tweet
+
+	return tweet, nil
+}
+
+func (u *myInMemoryRepository) GetTweetById(id int) (domain.Tweet, error) {
+	tweet, ok := u.tweetMap[id]
+
+	if !ok {
+		return tweet, errors.New("tweet id not found")
+	}
+
+	return tweet, nil
 }
