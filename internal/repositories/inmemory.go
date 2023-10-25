@@ -46,6 +46,26 @@ func (u *myInMemoryRepository) Save(user domain.User) (domain.User, error) {
 	return user, nil
 }
 
+func (u *myInMemoryRepository) UpdateUser(id int, user domain.User) error {
+	// for valid item, update the data structures
+	dbUser, ok := u.userMap[id]
+
+	if !ok {
+		return errors.ErrUnsupported
+	}
+
+	if user.Email != "" && user.Email != dbUser.Email {
+		// delete old email
+		delete(u.emaild2idMap, dbUser.Email)
+		dbUser.Email = user.Email
+		u.emaild2idMap[user.Email] = id
+	}
+
+	user.ID = id
+	u.userMap[id] = user
+	return nil
+}
+
 func (u *myInMemoryRepository) GetUserById(id int) (domain.User, error) {
 	user, ok := u.userMap[id]
 

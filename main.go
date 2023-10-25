@@ -29,6 +29,7 @@ func main() {
 	subRouter := chi.NewRouter()
 
 	subRouter.Post("/users", userHttpHandler.CreateUser)
+	subRouter.Put("/users", userHttpHandler.UpdateUser)
 	subRouter.Post("/login", userHttpHandler.LoginUser)
 
 	subRouter.Post("/chirps", userHttpHandler.PostTweet)

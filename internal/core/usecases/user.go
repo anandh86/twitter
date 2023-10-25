@@ -45,6 +45,16 @@ func (u userUseCase) CreateUser(emailid string, password string) (domain.User, e
 	return savedUser, nil
 }
 
+func (u userUseCase) UpdateUser(id int, emailid string, password string) error {
+	// Generate a salted hash for the password
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	user := domain.User{
+		Email:          emailid,
+		HashedPassword: hashedPassword,
+	}
+	return u.repoImpl.UpdateUser(id, user)
+}
+
 func (u userUseCase) LoginUser(emailid string, password string) (int, error) {
 	// TODO
 	userId, err := u.repoImpl.GetUserId(emailid)
