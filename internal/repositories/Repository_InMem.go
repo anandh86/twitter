@@ -8,20 +8,20 @@ import (
 )
 
 // In memory implementation
-func ProvideUserRepository() ports.UserRepository {
-	return &myInMemoryUserRepository{
+func ProvideInMemoryRepo() ports.IRepository {
+	return &myInMemoryRepository{
 		userMap:          make(map[int]domain.User),
 		currentNoOfUsers: 0,
 	}
 }
 
-// myInMemoryUserRepository implements ports.UserRepository
-type myInMemoryUserRepository struct {
+// myInMemoryRepository implements ports.UserRepository
+type myInMemoryRepository struct {
 	userMap          map[int]domain.User
 	currentNoOfUsers int
 }
 
-func (u *myInMemoryUserRepository) Save(user domain.User) (domain.User, error) {
+func (u *myInMemoryRepository) Save(user domain.User) (domain.User, error) {
 
 	if _, ok := u.userMap[user.ID]; ok {
 		// user already present
@@ -37,7 +37,7 @@ func (u *myInMemoryUserRepository) Save(user domain.User) (domain.User, error) {
 	return user, nil
 }
 
-func (u *myInMemoryUserRepository) GetUserById(id int) (domain.User, error) {
+func (u *myInMemoryRepository) GetUserById(id int) (domain.User, error) {
 	user, ok := u.userMap[id]
 
 	if !ok {

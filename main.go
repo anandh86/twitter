@@ -13,7 +13,7 @@ import (
 func main() {
 
 	// wiring
-	userRepository := adapters.ProvideUserRepository()
+	userRepository := adapters.ProvideInMemoryRepo()
 	userUseCase := usecases.ProvideUserUseCase(userRepository)
 	userHttpHandler := handlers.ProvideUserHttpHandler(userUseCase)
 

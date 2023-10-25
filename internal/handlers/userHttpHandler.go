@@ -8,14 +8,14 @@ import (
 	"github.com/anandhmaps/chirpy/internal/core/ports"
 )
 
-func ProvideUserHttpHandler(uuc ports.UserUseCase) *UserHttpHandler {
+func ProvideUserHttpHandler(uuc ports.IUseCase) *UserHttpHandler {
 	return &UserHttpHandler{
 		uuc: uuc,
 	}
 }
 
 type UserHttpHandler struct {
-	uuc ports.UserUseCase
+	uuc ports.IUseCase
 }
 
 func (u *UserHttpHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
