@@ -6,6 +6,7 @@ import "github.com/anandhmaps/chirpy/internal/core/domain"
 type IRepository interface {
 	Save(user domain.User) (domain.User, error)
 	GetUserById(id int) (domain.User, error)
+	GetUserId(emailid string) (int, error)
 	SaveTweet(tweet domain.Tweet) (domain.Tweet, error)
 	GetTweetById(id int) (domain.Tweet, error)
 }

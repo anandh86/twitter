@@ -24,7 +24,7 @@ func (u *UserHttpHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 
-	userRequest := domain.User{}
+	userRequest := UserRequestDTO{}
 
 	err := decoder.Decode(&userRequest)
 
@@ -33,8 +33,45 @@ func (u *UserHttpHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userResponse, _ := u.uuc.CreateUser(userRequest.Email)
-	respondWithJSON(w, http.StatusCreated, userResponse)
+	userResponse, errCreation := u.uuc.CreateUser(userRequest.Email, userRequest.Password)
+
+	if errCreation != nil {
+		respondWithError(w, http.StatusBadRequest, "account present already")
+		return
+	}
+	userResponseDTO := UserResponseDTO{
+		ID:    userResponse.ID,
+		Email: userResponse.Email,
+	}
+	respondWithJSON(w, http.StatusCreated, userResponseDTO)
+}
+
+func (u *UserHttpHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
+
+	decoder := json.NewDecoder(r.Body)
+
+	userRequest := UserRequestDTO{}
+
+	err := decoder.Decode(&userRequest)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+
+	userId, err1 := u.uuc.LoginUser(userRequest.Email, userRequest.Password)
+
+	if err1 != nil {
+		// Login failed
+		respondWithError(w, http.StatusUnauthorized, "Invalid credentials")
+	}
+
+	// success
+	userResponseDTO := UserResponseDTO{
+		ID:    userId,
+		Email: userRequest.Email,
+	}
+	respondWithJSON(w, http.StatusOK, userResponseDTO)
 }
 
 func (u *UserHttpHandler) PostTweet(w http.ResponseWriter, r *http.Request) {
