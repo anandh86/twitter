@@ -21,3 +21,4 @@
 go.work
 chirpy
 .DS_Store
+.env
