@@ -64,6 +64,11 @@ func (u *UserHttpHandler) GetTweetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tweetResponse, _ := u.uuc.GetTweetById(chirpID)
-	respondWithJSON(w, http.StatusCreated, tweetResponse)
+	tweetResponse, err1 := u.uuc.GetTweetById(chirpID)
+
+	if err1 != nil {
+		respondWithError(w, http.StatusNotFound, "Invalid parameters")
+	}
+
+	respondWithJSON(w, http.StatusOK, tweetResponse)
 }
