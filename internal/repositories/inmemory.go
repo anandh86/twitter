@@ -13,6 +13,7 @@ func ProvideInMemoryRepo() ports.IRepository {
 		userMap:           make(map[int]domain.User),
 		tweetMap:          make(map[int]domain.Tweet),
 		emaild2idMap:      make(map[string]int),
+		tokenRepo:         make(map[string]bool),
 		currentNoOfUsers:  0,
 		currentNoOfTweets: 0,
 	}
@@ -27,6 +28,34 @@ type myInMemoryRepository struct {
 	currentNoOfTweets int
 
 	emaild2idMap map[string]int
+
+	tokenRepo map[string]bool
+}
+
+func (u *myInMemoryRepository) CreateToken(token string) bool {
+
+	if _, ok := u.tokenRepo[token]; ok {
+		return false
+	}
+
+	u.tokenRepo[token] = false
+	return true
+}
+
+func (u *myInMemoryRepository) ReadToken(token string) bool {
+
+	return u.tokenRepo[token]
+}
+
+func (u *myInMemoryRepository) UpdateToken(token string, revokeStatus bool) bool {
+
+	if _, ok := u.tokenRepo[token]; !ok {
+		return false
+	}
+
+	u.tokenRepo[token] = revokeStatus
+
+	return true
 }
 
 func (u *myInMemoryRepository) Save(user domain.User) (domain.User, error) {

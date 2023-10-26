@@ -117,3 +117,16 @@ func (u userUseCase) PostTweet(body string) (domain.Tweet, error) {
 func (u userUseCase) GetTweetById(id int) (domain.Tweet, error) {
 	return u.repoImpl.GetTweetById(id)
 }
+
+func (u userUseCase) StoreRefreshToken(token string) bool {
+	return u.repoImpl.CreateToken(token)
+}
+
+func (u userUseCase) RevokeRefreshToken(token string) bool {
+
+	return u.repoImpl.UpdateToken(token, true)
+}
+
+func (u userUseCase) IsRefreshTokenRevoked(token string) bool {
+	return u.repoImpl.ReadToken(token)
+}

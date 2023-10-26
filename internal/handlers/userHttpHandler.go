@@ -74,6 +74,18 @@ func (u *UserHttpHandler) createJWTToken(userId int, expiresInSeconds int, issue
 	return token.SignedString(mySigningKey)
 }
 
+func (u *UserHttpHandler) Revoke(w http.ResponseWriter, r *http.Request) {
+	tokenString := fetchBearerToken(r)
+
+	if !u.uuc.RevokeRefreshToken(tokenString) {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, "")
+
+}
+
 func (u *UserHttpHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	tokenString := fetchBearerToken(r)
 
@@ -87,6 +99,11 @@ func (u *UserHttpHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	tokenIssuer, _ := jwtToken.Claims.GetIssuer()
 
 	if tokenIssuer != "chirpy-refresh" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	if u.uuc.IsRefreshTokenRevoked(tokenString) {
 		respondWithError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
@@ -146,6 +163,7 @@ func (u *UserHttpHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	// create refresh token
 	refreshToken, _ := u.generateRefreshToken(userId)
+	u.uuc.StoreRefreshToken(refreshToken)
 
 	// presentation segment
 	userResponseDTO := UserResponseWithTokenDTO{

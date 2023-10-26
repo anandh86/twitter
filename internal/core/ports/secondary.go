@@ -10,4 +10,7 @@ type IRepository interface {
 	UpdateUser(id int, user domain.User) error
 	SaveTweet(tweet domain.Tweet) (domain.Tweet, error)
 	GetTweetById(id int) (domain.Tweet, error)
+	CreateToken(token string) bool
+	ReadToken(token string) bool
+	UpdateToken(token string, revokeStatus bool) bool
 }
