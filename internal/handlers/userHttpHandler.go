@@ -58,27 +58,13 @@ func (u *UserHttpHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, userResponseDTO)
 }
 
-func (u *UserHttpHandler) createJWTToken(userId int, expiresInSeconds int) (string, error) {
-
+func (u *UserHttpHandler) createJWTToken(userId int, expiresInSeconds int, issuer string) (string, error) {
 	mySigningKey := []byte(u.token)
-	var expiresAt time.Time
-
-	// expiry time calculation
-	{
-		defaultExpirationTime := 24 * time.Hour
-
-		if expiresInSeconds == 0 {
-			expiresAt = time.Now().Add(defaultExpirationTime)
-		} else if expiresInSeconds > int(defaultExpirationTime.Seconds()) {
-			expiresAt = time.Now().Add(defaultExpirationTime)
-		} else {
-			expiresAt = time.Now().Add(time.Duration(expiresInSeconds) * time.Second)
-		}
-	}
+	expiresAt := newFunction(expiresInSeconds)
 
 	// create the claims
 	claims := &jwt.RegisteredClaims{
-		Issuer:    "chirpy",
+		Issuer:    issuer,
 		Subject:   strconv.Itoa(userId),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
 		ExpiresAt: jwt.NewNumericDate(expiresAt),
@@ -88,19 +74,34 @@ func (u *UserHttpHandler) createJWTToken(userId int, expiresInSeconds int) (stri
 	return token.SignedString(mySigningKey)
 }
 
+// adjust expiry time based on biz logic
+func newFunction(expiresInSeconds int) time.Time {
+	var expiresAt time.Time
+	defaultExpirationTime := 24 * time.Hour
+
+	if expiresInSeconds == 0 {
+		expiresAt = time.Now().Add(defaultExpirationTime)
+	} else if expiresInSeconds > int(defaultExpirationTime.Seconds()) {
+		expiresAt = time.Now().Add(defaultExpirationTime)
+	} else {
+		expiresAt = time.Now().Add(time.Duration(expiresInSeconds) * time.Second)
+	}
+	return expiresAt
+}
+
 func (u *UserHttpHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
+	// fetch input info
 	decoder := json.NewDecoder(r.Body)
-
 	userRequest := UserRequestDTO{}
-
 	err := decoder.Decode(&userRequest)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		respondWithError(w, http.StatusBadRequest, "Malformed json body")
 		return
 	}
 
+	// call use case
 	userId, err1 := u.uuc.LoginUser(userRequest.Email, userRequest.Password)
 
 	if err1 != nil {
@@ -109,70 +110,80 @@ func (u *UserHttpHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// success
-	token, _ := u.createJWTToken(userId, userRequest.Expiry)
+	// create access token
+	oneHourInSec := 60 * 60
+	accessToken, _ := u.createJWTToken(userId, oneHourInSec, "chirpy-access")
 
+	// create refresh token
+	sixtyDaysInSec := 60 * 60 * 24 * 60
+	refreshToken, _ := u.createJWTToken(userId, sixtyDaysInSec, "chirpy-refresh")
+
+	// presentation segment
 	userResponseDTO := UserResponseWithTokenDTO{
-		ID:    userId,
-		Email: userRequest.Email,
-		Token: token,
+		ID:           userId,
+		Email:        userRequest.Email,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}
 	respondWithJSON(w, http.StatusOK, userResponseDTO)
 }
 
-func (u *UserHttpHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
-
+func fetchBearerToken(r *http.Request) string {
 	bearerToken := r.Header.Get("Authorization")
 
 	parts := strings.Fields(bearerToken)
 
-	tokenString := parts[1]
+	return parts[1]
+}
 
-	{
-		tokenSecret := u.token
-		claimsStruct := jwt.RegisteredClaims{}
+func isValidToken(jwtToken string, tokenSecret string) (bool, *jwt.Token) {
 
-		token, err := jwt.ParseWithClaims(
-			tokenString,
-			&claimsStruct,
-			func(token *jwt.Token) (interface{}, error) { return []byte(tokenSecret), nil },
-		)
+	claimsStruct := jwt.RegisteredClaims{}
 
-		if err != nil {
-			respondWithError(w, http.StatusUnauthorized, "unauthorized")
-			return
-		}
+	token, err := jwt.ParseWithClaims(
+		jwtToken,
+		&claimsStruct,
+		func(token *jwt.Token) (interface{}, error) { return []byte(tokenSecret), nil },
+	)
 
-		if !token.Valid {
-			respondWithError(w, http.StatusUnauthorized, "unauthorized")
-			return
-		}
+	return (err == nil && token.Valid), token
+}
 
-		// if valid token, update the user details
-		userId, _ := token.Claims.GetSubject()
-		userIdInt, _ := strconv.Atoi(userId)
+func (u *UserHttpHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
-		decoder := json.NewDecoder(r.Body)
+	tokenString := fetchBearerToken(r)
 
-		userRequest := UserRequestDTO{}
+	isValidToken, jwtToken := isValidToken(tokenString, u.token)
 
-		errDecode := decoder.Decode(&userRequest)
-
-		if errDecode != nil {
-			respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
-			return
-		}
-
-		if authErr := u.uuc.UpdateUser(userIdInt, userRequest.Email, userRequest.Password); authErr != nil {
-			respondWithError(w, http.StatusUnauthorized, "got issues")
-		}
-
-		userResponseDTO := UserResponseDTO{
-			ID:    userIdInt,
-			Email: userRequest.Email,
-		}
-		respondWithJSON(w, http.StatusOK, userResponseDTO)
+	if !isValidToken {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
 	}
+
+	// update the user info
+	userId, _ := jwtToken.Claims.GetSubject()
+	userIdInt, _ := strconv.Atoi(userId)
+
+	decoder := json.NewDecoder(r.Body)
+	userRequest := UserRequestDTO{}
+	errDecode := decoder.Decode(&userRequest)
+
+	if errDecode != nil {
+		respondWithError(w, http.StatusBadRequest, "Malformed json body")
+		return
+	}
+
+	if authErr := u.uuc.UpdateUser(userIdInt, userRequest.Email, userRequest.Password); authErr != nil {
+		respondWithError(w, http.StatusUnauthorized, "got issues")
+		return
+	}
+
+	// presentation segment
+	userResponseDTO := UserResponseDTO{
+		ID:    userIdInt,
+		Email: userRequest.Email,
+	}
+	respondWithJSON(w, http.StatusOK, userResponseDTO)
 }
 
 func (u *UserHttpHandler) PostTweet(w http.ResponseWriter, r *http.Request) {
