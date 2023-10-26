@@ -8,8 +8,9 @@ type IUseCase interface {
 	UpdateUser(id int, emailid string, password string) error
 	GetUserById(id int) (domain.User, error)
 	LoginUser(emailid string, password string) (int, error)
-	PostTweet(body string) (domain.Tweet, error)
+	PostTweet(body string, author_id int) (domain.Tweet, error)
 	GetTweetById(id int) (domain.Tweet, error)
+	GettAllTweets() ([]domain.Tweet, error)
 	StoreRefreshToken(token string) bool
 	RevokeRefreshToken(token string) bool
 	IsRefreshTokenRevoked(token string) bool

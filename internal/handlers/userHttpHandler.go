@@ -277,7 +277,7 @@ func (u *UserHttpHandler) PostTweet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tweetResponse, _ := u.uuc.PostTweet(tweetRequest.Body)
+	tweetResponse, _ := u.uuc.PostTweet(tweetRequest.Body, authorId)
 	tweetResponse.Author = authorId
 	respondWithJSON(w, http.StatusCreated, tweetResponse)
 }
@@ -300,4 +300,12 @@ func (u *UserHttpHandler) GetTweetById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, tweetResponse)
+}
+
+func (u *UserHttpHandler) GetAllTweets(w http.ResponseWriter, r *http.Request) {
+
+	allTweets, _ := u.uuc.GettAllTweets()
+
+	respondWithJSON(w, http.StatusOK, allTweets)
+
 }

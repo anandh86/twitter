@@ -135,3 +135,13 @@ func (u *myInMemoryRepository) GetTweetById(id int) (domain.Tweet, error) {
 
 	return tweet, nil
 }
+
+func (u *myInMemoryRepository) FetchAllTweets() ([]domain.Tweet, error) {
+	tweets := make([]domain.Tweet, 0)
+
+	for _, tweet := range u.tweetMap {
+		tweets = append(tweets, tweet)
+	}
+
+	return tweets, nil
+}

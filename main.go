@@ -36,6 +36,7 @@ func main() {
 
 	subRouter.Post("/chirps", userHttpHandler.PostTweet)
 	subRouter.Get("/chirps/{chirpID}", userHttpHandler.GetTweetById)
+	subRouter.Get("/chirps", userHttpHandler.GetAllTweets)
 
 	r.Mount("/api", subRouter)
 

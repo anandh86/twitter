@@ -82,7 +82,7 @@ func (u userUseCase) GetUserById(id int) (domain.User, error) {
 	return u.repoImpl.GetUserById(id)
 }
 
-func (u userUseCase) PostTweet(body string) (domain.Tweet, error) {
+func (u userUseCase) PostTweet(body string, author_id int) (domain.Tweet, error) {
 	// business logic here
 
 	// check for validity
@@ -110,12 +110,16 @@ func (u userUseCase) PostTweet(body string) (domain.Tweet, error) {
 		body = re.ReplaceAllString(input, "****")
 	}
 
-	tweet := domain.Tweet{Body: body}
+	tweet := domain.Tweet{Body: body, Author: author_id}
 	return u.repoImpl.SaveTweet(tweet)
 }
 
 func (u userUseCase) GetTweetById(id int) (domain.Tweet, error) {
 	return u.repoImpl.GetTweetById(id)
+}
+
+func (u userUseCase) GettAllTweets() ([]domain.Tweet, error) {
+	return u.repoImpl.FetchAllTweets()
 }
 
 func (u userUseCase) StoreRefreshToken(token string) bool {
