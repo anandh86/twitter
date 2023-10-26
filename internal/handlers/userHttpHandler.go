@@ -160,6 +160,13 @@ func (u *UserHttpHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokenIssuer, _ := jwtToken.Claims.GetIssuer()
+
+	if tokenIssuer != "chirpy-access" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	// update the user info
 	userId, _ := jwtToken.Claims.GetSubject()
 	userIdInt, _ := strconv.Atoi(userId)
