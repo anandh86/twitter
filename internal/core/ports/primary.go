@@ -9,6 +9,7 @@ type IUseCase interface {
 	GetUserById(id int) (domain.User, error)
 	LoginUser(emailid string, password string) (int, error)
 	PostTweet(body string, author_id int) (domain.Tweet, error)
+	DeleteTweet(tweetId int, author_id int) error
 	GetTweetById(id int) (domain.Tweet, error)
 	GettAllTweets() ([]domain.Tweet, error)
 	StoreRefreshToken(token string) bool

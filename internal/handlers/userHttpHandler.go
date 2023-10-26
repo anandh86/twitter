@@ -282,6 +282,45 @@ func (u *UserHttpHandler) PostTweet(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, tweetResponse)
 }
 
+func (u *UserHttpHandler) DeleteTweet(w http.ResponseWriter, r *http.Request) {
+	// Read the input parameter
+	chirpIDStr := chi.URLParam(r, "chirpID")
+	chirpID, err := strconv.Atoi(chirpIDStr)
+
+	// authenticate the user first
+	tokenString := fetchBearerToken(r)
+
+	isValidToken, jwtToken := isValidToken(tokenString, u.token)
+
+	if !isValidToken {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	tokenIssuer, _ := jwtToken.Claims.GetIssuer()
+
+	if tokenIssuer != "chirpy-access" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	// figure out author's id
+	authorIdStr, _ := jwtToken.Claims.GetSubject()
+	authorId, _ := strconv.Atoi(authorIdStr)
+
+	if err != nil || chirpID == 0 {
+		respondWithError(w, http.StatusInternalServerError, "Invalid parameters")
+		return
+	}
+
+	if deletionErr := u.uuc.DeleteTweet(chirpID, authorId); deletionErr != nil {
+		respondWithError(w, http.StatusForbidden, "Unauthorized")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, "all good")
+}
+
 func (u *UserHttpHandler) GetTweetById(w http.ResponseWriter, r *http.Request) {
 
 	// Read the input parameter

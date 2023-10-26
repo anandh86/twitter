@@ -9,6 +9,7 @@ type IRepository interface {
 	GetUserId(emailid string) (int, error)
 	UpdateUser(id int, user domain.User) error
 	SaveTweet(tweet domain.Tweet) (domain.Tweet, error)
+	DeleteTweet(tweet domain.Tweet) error
 	GetTweetById(id int) (domain.Tweet, error)
 	FetchAllTweets() ([]domain.Tweet, error)
 	CreateToken(token string) bool

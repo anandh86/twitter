@@ -118,6 +118,20 @@ func (u userUseCase) GetTweetById(id int) (domain.Tweet, error) {
 	return u.repoImpl.GetTweetById(id)
 }
 
+func (u userUseCase) DeleteTweet(tweetId int, author_id int) error {
+	repoTweet, err := u.repoImpl.GetTweetById(tweetId)
+
+	if err != nil {
+		return err
+	}
+
+	if repoTweet.Author != author_id {
+		return errors.ErrUnsupported
+	}
+
+	return nil
+}
+
 func (u userUseCase) GettAllTweets() ([]domain.Tweet, error) {
 	return u.repoImpl.FetchAllTweets()
 }

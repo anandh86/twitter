@@ -126,6 +126,19 @@ func (u *myInMemoryRepository) SaveTweet(tweet domain.Tweet) (domain.Tweet, erro
 	return tweet, nil
 }
 
+func (u *myInMemoryRepository) DeleteTweet(tweet domain.Tweet) error {
+	tweetID := tweet.ID
+
+	if _, ok := u.tweetMap[tweetID]; !ok {
+		// tweet not present
+		return errors.ErrUnsupported
+	}
+
+	delete(u.tweetMap, tweetID)
+
+	return nil
+}
+
 func (u *myInMemoryRepository) GetTweetById(id int) (domain.Tweet, error) {
 	tweet, ok := u.tweetMap[id]
 
