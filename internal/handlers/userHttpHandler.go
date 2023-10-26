@@ -60,7 +60,7 @@ func (u *UserHttpHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (u *UserHttpHandler) createJWTToken(userId int, expiresInSeconds int, issuer string) (string, error) {
 	mySigningKey := []byte(u.token)
-	expiresAt := newFunction(expiresInSeconds)
+	expiresAt := time.Now().Add(time.Duration(expiresInSeconds) * time.Second)
 
 	// create the claims
 	claims := &jwt.RegisteredClaims{
@@ -74,19 +74,50 @@ func (u *UserHttpHandler) createJWTToken(userId int, expiresInSeconds int, issue
 	return token.SignedString(mySigningKey)
 }
 
-// adjust expiry time based on biz logic
-func newFunction(expiresInSeconds int) time.Time {
-	var expiresAt time.Time
-	defaultExpirationTime := 24 * time.Hour
+func (u *UserHttpHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	tokenString := fetchBearerToken(r)
 
-	if expiresInSeconds == 0 {
-		expiresAt = time.Now().Add(defaultExpirationTime)
-	} else if expiresInSeconds > int(defaultExpirationTime.Seconds()) {
-		expiresAt = time.Now().Add(defaultExpirationTime)
-	} else {
-		expiresAt = time.Now().Add(time.Duration(expiresInSeconds) * time.Second)
+	isValidToken, jwtToken := isValidToken(tokenString, u.token)
+
+	if !isValidToken {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
 	}
-	return expiresAt
+
+	tokenIssuer, _ := jwtToken.Claims.GetIssuer()
+
+	if tokenIssuer != "chirpy-refresh" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	// generate new access token
+	userIdStr, _ := jwtToken.Claims.GetSubject()
+	userId, _ := strconv.Atoi(userIdStr)
+
+	accessToken, _ := u.generateAccessToken(userId)
+
+	response := map[string]string{
+		"token": accessToken,
+	}
+
+	respondWithJSON(w, http.StatusOK, response)
+}
+
+func (u *UserHttpHandler) generateAccessToken(userId int) (string, error) {
+	issuer := "chirpy-access"
+	// access tokens should expire in one hour
+	expiryInSeconds := int(time.Hour.Seconds())
+
+	return u.createJWTToken(userId, expiryInSeconds, issuer)
+}
+
+func (u *UserHttpHandler) generateRefreshToken(userId int) (string, error) {
+	issuer := "chirpy-refresh"
+	// refresh tokens should expire in 60 days
+	expireIn60Days := 60 * 24 * time.Hour
+
+	return u.createJWTToken(userId, int(expireIn60Days.Seconds()), issuer)
 }
 
 func (u *UserHttpHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
@@ -111,12 +142,10 @@ func (u *UserHttpHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create access token
-	oneHourInSec := 60 * 60
-	accessToken, _ := u.createJWTToken(userId, oneHourInSec, "chirpy-access")
+	accessToken, _ := u.generateAccessToken(userId)
 
 	// create refresh token
-	sixtyDaysInSec := 60 * 60 * 24 * 60
-	refreshToken, _ := u.createJWTToken(userId, sixtyDaysInSec, "chirpy-refresh")
+	refreshToken, _ := u.generateRefreshToken(userId)
 
 	// presentation segment
 	userResponseDTO := UserResponseWithTokenDTO{

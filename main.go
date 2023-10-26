@@ -31,6 +31,7 @@ func main() {
 	subRouter.Post("/users", userHttpHandler.CreateUser)
 	subRouter.Put("/users", userHttpHandler.UpdateUser)
 	subRouter.Post("/login", userHttpHandler.LoginUser)
+	subRouter.Post("/refresh", userHttpHandler.Refresh)
 
 	subRouter.Post("/chirps", userHttpHandler.PostTweet)
 	subRouter.Get("/chirps/{chirpID}", userHttpHandler.GetTweetById)
