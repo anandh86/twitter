@@ -178,6 +178,10 @@ func (u *UserHttpHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 func fetchBearerToken(r *http.Request) string {
 	bearerToken := r.Header.Get("Authorization")
 
+	if bearerToken == "" {
+		return bearerToken
+	}
+
 	parts := strings.Fields(bearerToken)
 
 	return parts[1]
@@ -242,6 +246,27 @@ func (u *UserHttpHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 func (u *UserHttpHandler) PostTweet(w http.ResponseWriter, r *http.Request) {
 
+	// authenticate the user first
+	tokenString := fetchBearerToken(r)
+
+	isValidToken, jwtToken := isValidToken(tokenString, u.token)
+
+	if !isValidToken {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	tokenIssuer, _ := jwtToken.Claims.GetIssuer()
+
+	if tokenIssuer != "chirpy-access" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	// figure out author's id
+	authorIdStr, _ := jwtToken.Claims.GetSubject()
+	authorId, _ := strconv.Atoi(authorIdStr)
+
 	decoder := json.NewDecoder(r.Body)
 	tweetRequest := domain.Tweet{}
 
@@ -253,6 +278,7 @@ func (u *UserHttpHandler) PostTweet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tweetResponse, _ := u.uuc.PostTweet(tweetRequest.Body)
+	tweetResponse.Author = authorId
 	respondWithJSON(w, http.StatusCreated, tweetResponse)
 }
 
