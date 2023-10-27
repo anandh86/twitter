@@ -136,8 +136,16 @@ func (u userUseCase) DeleteTweet(tweetId int, author_id int) error {
 	return nil
 }
 
-func (u userUseCase) GettAllTweets() ([]domain.Tweet, error) {
+func (u userUseCase) GetAllTweets() ([]domain.Tweet, error) {
 	return u.repoImpl.FetchAllTweets()
+}
+
+func (u userUseCase) GetAuthorTweets(author_id int) ([]domain.Tweet, error) {
+
+	if _, err := u.repoImpl.GetUserById(author_id); err != nil {
+		return nil, errors.ErrUnsupported
+	}
+	return u.repoImpl.FetchAuthorTweets(author_id)
 }
 
 func (u userUseCase) StoreRefreshToken(token string) bool {

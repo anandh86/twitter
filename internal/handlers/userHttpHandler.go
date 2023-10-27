@@ -370,10 +370,19 @@ func (u *UserHttpHandler) GetTweetById(w http.ResponseWriter, r *http.Request) {
 
 func (u *UserHttpHandler) GetAllTweets(w http.ResponseWriter, r *http.Request) {
 
-	allTweets, _ := u.uuc.GettAllTweets()
+	// s is a string that contains the value of the author_id query parameter
+	// if it exists, or an empty string if it doesn't
+	authorIdStr := r.URL.Query().Get("author_id")
+	var allTweets []domain.Tweet
+
+	if authorIdStr == "" {
+		allTweets, _ = u.uuc.GetAllTweets()
+	} else {
+		author_id, _ := strconv.Atoi(authorIdStr)
+		allTweets, _ = u.uuc.GetAuthorTweets(author_id)
+	}
 
 	respondWithJSON(w, http.StatusOK, allTweets)
-
 }
 
 func (u *UserHttpHandler) PolkaWebHooks(w http.ResponseWriter, r *http.Request) {

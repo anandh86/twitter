@@ -171,3 +171,17 @@ func (u *myInMemoryRepository) FetchAllTweets() ([]domain.Tweet, error) {
 
 	return tweets, nil
 }
+
+func (u *myInMemoryRepository) FetchAuthorTweets(author_id int) ([]domain.Tweet, error) {
+
+	tweets := make([]domain.Tweet, 0)
+
+	for _, tweet := range u.tweetMap {
+		if tweet.Author != author_id {
+			continue
+		}
+		tweets = append(tweets, tweet)
+	}
+
+	return tweets, nil
+}

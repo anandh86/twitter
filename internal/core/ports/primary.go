@@ -12,7 +12,8 @@ type IUseCase interface {
 	PostTweet(body string, author_id int) (domain.Tweet, error)
 	DeleteTweet(tweetId int, author_id int) error
 	GetTweetById(id int) (domain.Tweet, error)
-	GettAllTweets() ([]domain.Tweet, error)
+	GetAllTweets() ([]domain.Tweet, error)
+	GetAuthorTweets(author_id int) ([]domain.Tweet, error)
 	StoreRefreshToken(token string) bool
 	RevokeRefreshToken(token string) bool
 	IsRefreshTokenRevoked(token string) bool

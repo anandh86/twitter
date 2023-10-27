@@ -13,6 +13,7 @@ type IRepository interface {
 	DeleteTweet(tweet domain.Tweet) error
 	GetTweetById(id int) (domain.Tweet, error)
 	FetchAllTweets() ([]domain.Tweet, error)
+	FetchAuthorTweets(author_id int) ([]domain.Tweet, error)
 	CreateToken(token string) bool
 	ReadToken(token string) bool
 	UpdateToken(token string, revokeStatus bool) bool
