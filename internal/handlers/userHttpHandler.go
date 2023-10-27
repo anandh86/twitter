@@ -165,12 +165,20 @@ func (u *UserHttpHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	refreshToken, _ := u.generateRefreshToken(userId)
 	u.uuc.StoreRefreshToken(refreshToken)
 
+	repoUser, errFunc := u.uuc.GetUserById(userId)
+
+	if errFunc != nil {
+		respondWithError(w, http.StatusBadRequest, "Server issues")
+		return
+	}
+
 	// presentation segment
 	userResponseDTO := UserResponseWithTokenDTO{
 		ID:           userId,
 		Email:        userRequest.Email,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		IsChirpyRed:  repoUser.IsChirpyRed,
 	}
 	respondWithJSON(w, http.StatusOK, userResponseDTO)
 }
@@ -346,5 +354,30 @@ func (u *UserHttpHandler) GetAllTweets(w http.ResponseWriter, r *http.Request) {
 	allTweets, _ := u.uuc.GettAllTweets()
 
 	respondWithJSON(w, http.StatusOK, allTweets)
+
+}
+
+func (u *UserHttpHandler) PolkaWebHooks(w http.ResponseWriter, r *http.Request) {
+
+	decoder := json.NewDecoder(r.Body)
+	webHook := WebHookBody{}
+	err := decoder.Decode(&webHook)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+
+	if webHook.Event != "user.upgraded" {
+		respondWithJSON(w, http.StatusOK, "ok")
+		return
+	}
+
+	if errMembership := u.uuc.UpdateUserMembership(webHook.Data.UserID, true); errMembership != nil {
+		respondWithError(w, http.StatusNotFound, "user not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, "membership updated")
 
 }

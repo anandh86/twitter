@@ -75,6 +75,19 @@ func (u *myInMemoryRepository) Save(user domain.User) (domain.User, error) {
 	return user, nil
 }
 
+func (u *myInMemoryRepository) UpdateUserMembership(id int, isMember bool) error {
+	// for valid item, update the data structures
+	dbUser, ok := u.userMap[id]
+
+	if !ok {
+		return errors.ErrUnsupported
+	}
+
+	dbUser.IsChirpyRed = isMember
+	u.userMap[id] = dbUser
+	return nil
+}
+
 func (u *myInMemoryRepository) UpdateUser(id int, user domain.User) error {
 	// for valid item, update the data structures
 	dbUser, ok := u.userMap[id]

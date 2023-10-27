@@ -45,6 +45,10 @@ func (u userUseCase) CreateUser(emailid string, password string) (domain.User, e
 	return savedUser, nil
 }
 
+func (u userUseCase) UpdateUserMembership(id int, isMember bool) error {
+	return u.repoImpl.UpdateUserMembership(id, isMember)
+}
+
 func (u userUseCase) UpdateUser(id int, emailid string, password string) error {
 	// Generate a salted hash for the password
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

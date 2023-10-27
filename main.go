@@ -39,6 +39,8 @@ func main() {
 	subRouter.Get("/chirps", userHttpHandler.GetAllTweets)
 	subRouter.Delete("/chirps/{chirpID}", userHttpHandler.DeleteTweet)
 
+	subRouter.Post("/polka/webhooks", userHttpHandler.PolkaWebHooks)
+
 	r.Mount("/api", subRouter)
 
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
