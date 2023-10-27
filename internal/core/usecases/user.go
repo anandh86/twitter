@@ -114,7 +114,7 @@ func (u userUseCase) PostTweet(body string, author_id int) (domain.Tweet, error)
 		body = re.ReplaceAllString(input, "****")
 	}
 
-	tweet := domain.Tweet{Body: body, Author: author_id}
+	tweet := domain.Tweet{Body: body, AuthorId: author_id}
 	return u.repoImpl.SaveTweet(tweet)
 }
 
@@ -129,7 +129,7 @@ func (u userUseCase) DeleteTweet(tweetId int, author_id int) error {
 		return err
 	}
 
-	if repoTweet.Author != author_id {
+	if repoTweet.AuthorId != author_id {
 		return errors.ErrUnsupported
 	}
 

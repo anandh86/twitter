@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -305,7 +306,7 @@ func (u *UserHttpHandler) PostTweet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tweetResponse, _ := u.uuc.PostTweet(tweetRequest.Body, authorId)
-	tweetResponse.Author = authorId
+	tweetResponse.AuthorId = authorId
 	respondWithJSON(w, http.StatusCreated, tweetResponse)
 }
 
@@ -382,6 +383,14 @@ func (u *UserHttpHandler) GetAllTweets(w http.ResponseWriter, r *http.Request) {
 		allTweets, _ = u.uuc.GetAuthorTweets(author_id)
 	}
 
+	sortBy := r.URL.Query().Get("sort")
+
+	if sortBy == "desc" {
+		sort.Sort(ByTweetIdDesc(allTweets))
+	} else {
+		sort.Sort(ByTweetIdAsc(allTweets))
+	}
+
 	respondWithJSON(w, http.StatusOK, allTweets)
 }
 
@@ -416,3 +425,17 @@ func (u *UserHttpHandler) PolkaWebHooks(w http.ResponseWriter, r *http.Request) 
 	respondWithJSON(w, http.StatusOK, "membership updated")
 
 }
+
+// Define a type for sorting by TweetId in ascending order
+type ByTweetIdAsc []domain.Tweet
+
+func (a ByTweetIdAsc) Len() int           { return len(a) }
+func (a ByTweetIdAsc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByTweetIdAsc) Less(i, j int) bool { return a[i].TweetId < a[j].TweetId }
+
+// Define a type for sorting by TweetId in descending order
+type ByTweetIdDesc []domain.Tweet
+
+func (a ByTweetIdDesc) Len() int           { return len(a) }
+func (a ByTweetIdDesc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByTweetIdDesc) Less(i, j int) bool { return a[i].TweetId > a[j].TweetId }

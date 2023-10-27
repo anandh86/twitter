@@ -133,14 +133,14 @@ func (u *myInMemoryRepository) GetUserId(emailid string) (int, error) {
 func (u *myInMemoryRepository) SaveTweet(tweet domain.Tweet) (domain.Tweet, error) {
 	tweetID := u.currentNoOfTweets + 1
 	u.currentNoOfTweets = tweetID
-	tweet.ID = tweetID
+	tweet.TweetId = tweetID
 	u.tweetMap[tweetID] = tweet
 
 	return tweet, nil
 }
 
 func (u *myInMemoryRepository) DeleteTweet(tweet domain.Tweet) error {
-	tweetID := tweet.ID
+	tweetID := tweet.TweetId
 
 	if _, ok := u.tweetMap[tweetID]; !ok {
 		// tweet not present
@@ -177,7 +177,7 @@ func (u *myInMemoryRepository) FetchAuthorTweets(author_id int) ([]domain.Tweet,
 	tweets := make([]domain.Tweet, 0)
 
 	for _, tweet := range u.tweetMap {
-		if tweet.Author != author_id {
+		if tweet.AuthorId != author_id {
 			continue
 		}
 		tweets = append(tweets, tweet)
