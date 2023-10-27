@@ -20,16 +20,19 @@ func ProvideUserHttpHandler(uuc ports.IUseCase) *UserHttpHandler {
 	godotenv.Load()
 
 	jwtSecret := os.Getenv("JWT_SECRET")
+	apiKey := os.Getenv("POLKA_KEY")
 
 	return &UserHttpHandler{
-		uuc:   uuc,
-		token: jwtSecret,
+		uuc:         uuc,
+		token:       jwtSecret,
+		polkaApiKey: apiKey,
 	}
 }
 
 type UserHttpHandler struct {
-	uuc   ports.IUseCase
-	token string
+	uuc         ports.IUseCase
+	token       string
+	polkaApiKey string
 }
 
 func (u *UserHttpHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -181,6 +184,22 @@ func (u *UserHttpHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		IsChirpyRed:  repoUser.IsChirpyRed,
 	}
 	respondWithJSON(w, http.StatusOK, userResponseDTO)
+}
+
+func fetchApiKey(r *http.Request) string {
+	authorizationHeaderToken := r.Header.Get("Authorization")
+
+	if authorizationHeaderToken == "" {
+		return ""
+	}
+
+	parts := strings.Fields(authorizationHeaderToken)
+
+	if parts[0] != "ApiKey" {
+		return ""
+	}
+
+	return parts[1]
 }
 
 func fetchBearerToken(r *http.Request) string {
@@ -358,6 +377,13 @@ func (u *UserHttpHandler) GetAllTweets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserHttpHandler) PolkaWebHooks(w http.ResponseWriter, r *http.Request) {
+
+	apiKey := fetchApiKey(r)
+
+	if apiKey != u.polkaApiKey {
+		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
 	decoder := json.NewDecoder(r.Body)
 	webHook := WebHookBody{}
