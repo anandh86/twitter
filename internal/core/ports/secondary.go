@@ -1,6 +1,6 @@
 package ports
 
-import "github.com/anandhmaps/chirpy/internal/core/domain"
+import "github.com/anandh86/chirpy/internal/core/domain"
 
 // IRepository is a secondary port that the core will make calls to
 type IRepository interface {

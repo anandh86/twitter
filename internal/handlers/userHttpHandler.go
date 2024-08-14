@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/anandhmaps/chirpy/internal/core/domain"
-	"github.com/anandhmaps/chirpy/internal/core/ports"
+	"github.com/anandh86/chirpy/internal/core/domain"
+	"github.com/anandh86/chirpy/internal/core/ports"
 	"github.com/go-chi/chi"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
@@ -312,8 +312,8 @@ func (u *UserHttpHandler) PostTweet(w http.ResponseWriter, r *http.Request) {
 
 func (u *UserHttpHandler) DeleteTweet(w http.ResponseWriter, r *http.Request) {
 	// Read the input parameter
-	chirpIDStr := chi.URLParam(r, "chirpID")
-	chirpID, err := strconv.Atoi(chirpIDStr)
+	tweetIdStr := chi.URLParam(r, "tweetId")
+	tweetId, err := strconv.Atoi(tweetIdStr)
 
 	// authenticate the user first
 	tokenString := fetchBearerToken(r)
@@ -336,12 +336,12 @@ func (u *UserHttpHandler) DeleteTweet(w http.ResponseWriter, r *http.Request) {
 	authorIdStr, _ := jwtToken.Claims.GetSubject()
 	authorId, _ := strconv.Atoi(authorIdStr)
 
-	if err != nil || chirpID == 0 {
+	if err != nil || tweetId == 0 {
 		respondWithError(w, http.StatusInternalServerError, "Invalid parameters")
 		return
 	}
 
-	if deletionErr := u.uuc.DeleteTweet(chirpID, authorId); deletionErr != nil {
+	if deletionErr := u.uuc.DeleteTweet(tweetId, authorId); deletionErr != nil {
 		respondWithError(w, http.StatusForbidden, "Unauthorized")
 		return
 	}
@@ -352,15 +352,15 @@ func (u *UserHttpHandler) DeleteTweet(w http.ResponseWriter, r *http.Request) {
 func (u *UserHttpHandler) GetTweetById(w http.ResponseWriter, r *http.Request) {
 
 	// Read the input parameter
-	chirpIDStr := chi.URLParam(r, "chirpID")
-	chirpID, err := strconv.Atoi(chirpIDStr)
+	tweetIdStr := chi.URLParam(r, "tweetId")
+	tweetId, err := strconv.Atoi(tweetIdStr)
 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Invalid parameters")
 		return
 	}
 
-	tweetResponse, err1 := u.uuc.GetTweetById(chirpID)
+	tweetResponse, err1 := u.uuc.GetTweetById(tweetId)
 
 	if err1 != nil {
 		respondWithError(w, http.StatusNotFound, "Invalid parameters")

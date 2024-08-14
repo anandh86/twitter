@@ -1,6 +1,6 @@
 package ports
 
-import "github.com/anandhmaps/chirpy/internal/core/domain"
+import "github.com/anandh86/chirpy/internal/core/domain"
 
 // IUseCase is a primary port that the core must respond to
 type IUseCase interface {

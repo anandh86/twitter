@@ -1,4 +1,4 @@
-module github.com/anandhmaps/chirpy
+module github.com/anandh86/chirpy
 
 go 1.21.1
 

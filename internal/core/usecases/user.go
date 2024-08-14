@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/anandhmaps/chirpy/internal/core/domain"
-	"github.com/anandhmaps/chirpy/internal/core/ports"
+	"github.com/anandh86/chirpy/internal/core/domain"
+	"github.com/anandh86/chirpy/internal/core/ports"
 
 	"golang.org/x/crypto/bcrypt"
 )

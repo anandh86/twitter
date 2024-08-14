@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/anandhmaps/chirpy/internal/core/usecases"
-	"github.com/anandhmaps/chirpy/internal/handlers"
-	adapters "github.com/anandhmaps/chirpy/internal/repositories"
+	"github.com/anandh86/chirpy/internal/core/usecases"
+	"github.com/anandh86/chirpy/internal/handlers"
+	adapters "github.com/anandh86/chirpy/internal/repositories"
 	"github.com/go-chi/chi"
 )
 
@@ -34,10 +34,10 @@ func main() {
 	subRouter.Post("/refresh", userHttpHandler.Refresh)
 	subRouter.Post("/revoke", userHttpHandler.Revoke)
 
-	subRouter.Post("/chirps", userHttpHandler.PostTweet)
-	subRouter.Get("/chirps/{chirpID}", userHttpHandler.GetTweetById)
-	subRouter.Get("/chirps", userHttpHandler.GetAllTweets)
-	subRouter.Delete("/chirps/{chirpID}", userHttpHandler.DeleteTweet)
+	subRouter.Post("/tweets", userHttpHandler.PostTweet)
+	subRouter.Get("/tweets/{tweetId}", userHttpHandler.GetTweetById)
+	subRouter.Get("/tweets", userHttpHandler.GetAllTweets)
+	subRouter.Delete("/tweets/{tweetId}", userHttpHandler.DeleteTweet)
 
 	subRouter.Post("/polka/webhooks", userHttpHandler.PolkaWebHooks)
 
